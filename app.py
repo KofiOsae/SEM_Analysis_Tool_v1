@@ -689,7 +689,7 @@ with tab2:
                 }
             
                 # Format metrics as "mean ± std [unit]"
-                formatted_metrics = {}
+              formatted_metrics = {}
               for key in metrics:
                   if " (avg)" in key:
                       base_key = key.replace(" (avg)", "")
