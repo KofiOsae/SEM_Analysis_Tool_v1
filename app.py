@@ -1,38 +1,284 @@
+combine the existing code and comments to develop a well integrated and unique imaging analysis tool. 
 
-# === Enhancements Added ===
-# 1. Session Save/Load Functionality
-import base64
+You have room to improvement to exceed expectation and functionality. 
 
-def save_session(data, filename="sem_session.json"):
-    with open(filename, "w") as f:
-        json.dump(data, f)
-    st.success(f"Session saved to {filename}")
+ask questions to understand if you something is unclear.
 
-def load_session(filename="sem_session.json"):
-    if os.path.exists(filename):
-        with open(filename, "r") as f:
-            return json.load(f)
-    else:
-        st.warning("Session file not found.")
-        return None
+1. Original Vision & Core Functionality
+A. Input and File Handling
 
-# 2. AI Detection Toggle
-st.sidebar.markdown("### Detection Mode")
-use_ai_detection = st.sidebar.checkbox("Enable AI-based Feature Detection", value=False)
+SEM Images:
 
-if use_ai_detection:
-    st.sidebar.info("AI detection is enabled. Using pretrained model for feature segmentation.")
-    # Placeholder for AI detection logic
-    # You can integrate YOLOv5 or U-Net here
-else:
-    st.sidebar.info("Using contour-based detection.")
+Upload one or multiple SEM images (supporting batch mode) in common formats (PNG, JPG, TIF, etc.).
 
-# 3. Deployment Readiness
-# Add Streamlit Cloud compatibility
-st.set_page_config(page_title="SEM Analysis Tool", layout="wide")
+Optionally define a Region of Interest (ROI) manually.
+
+Profilometer Traces:
+
+Upload trace files (CSV, XLS, TXT) for stylus/profile analysis.
+
+B. Basic Processing & Measurement
+
+For SEM Images:
+
+Convert pixel measurements into physical units using a scale factor (µm per pixel).
+
+Apply basic image preprocessing (e.g., blurring, inversion) to enhance contour detection.
+
+Detect contours and compute basic metrics like area, width, height, and aspect ratio.
+
+Calculate additional metrics such as groove depth, Ra (roughness) for top and bottom regions, and sidewall angle.
+
+Display an annotated overlay on the SEM image (e.g. with bounding boxes) and export results as CSV.
+
+For Profilometer Data:
+
+Plot the raw and smoothed profiles.
+
+Compute summary statistics (e.g., top width, bottom width, height, etc.).
+
+Display these results interactively.
+
+C. Tutorial and Help
+
+A basic tutorial tab explains how to upload images, process them, and export results.
+
+2. Requested Enhancements & New Revised Plan
+Our revised plan adds interactivity, advanced analysis, and a more robust user interface. It subdivides into several major areas:
+
+A. Enhanced User Controls & Processing Options
+Interactive Scale Calibration
+
+Drawable Canvas: • Add a canvas that lets the user draw a line over a visible scale bar (or over a separately uploaded “scale image”).
+
+Known Length Entry: • Provide a text input—supporting three decimals—for the actual (µm) length of the drawn line.
+
+Automatic Scale Computation: • Compute and display the conversion factor (µm per pixel) that can be used automatically, with the option to override manually.
+
+Expanded Preprocessing and Thresholding Options
+
+Preprocessing Controls: • Offer toggles for Gaussian blur (with adjustable kernel size), image inversion, and cropping (smart trimming at the bottom).
+
+Thresholding Methods: • Include a drop‑down with multiple options: “None”, “Fixed” (with a slider for threshold value), “Adaptive” (with adjustable block size and constant), and “Otsu”.
+
+Selectable Analysis Mode (SEM)
+
+Full Image vs. Line Profile Mode: • In Full Image mode, the tool extracts a complete vertical profile from each feature. • In Line Profile mode, the app extracts two separate profiles: a narrow vertical profile for groove-depth/roughness and a horizontal profile for measuring linewidth.
+
+Transfer to Profilometer: • Allow extraction of a SEM line profile that can be later transferred to the Profilometer tab.
+
+B. Advanced Feature Detection and Feature-Type Specific Analysis
+Improved Contour & Boundary Extraction
+
+Instead of only drawing rectangular bounding boxes, use contour approximation (cv2.approxPolyDP) to obtain a polygonal outline that more accurately represents the feature shape.
+
+Feature Types & Their Analysis
+
+Supported Feature Types: • Dots: Small, round features measured with high circularity and solidity criteria. • Array: Features arranged in a regular grid, where spacing might be considered later. • Ellipse: For elongated shapes, use ellipse fitting (cv2.fitEllipse) to extract orientation and precise aspect ratio. • Gratings: Apply FFT‑based pitch detection on the horizontal intensity profile to compute grating pitch (spacing). • Arbitrary: Use the default contour‑based approach for features that don’t fit into the above categories.
+
+The user’s selection of feature type will adjust which metrics are computed (e.g., orientation only for Ellipse analysis, pitch for Gratings) and will determine the default values for filtering.
+
+C. Interactive Filtering and Feature Management
+Real-Time, Granular Filtering Control
+
+Individual Filters: • For Area, Width, Height, Aspect Ratio, Solidity, and Circularity—and Orientation (for Ellipse features)—provide sliders (with double‑click to edit values) in a sidebar. • Each filter has its own checkbox so users can activate or disable that particular filter.
+
+Dynamic Feedback: • The filtering criteria are applied in real time. If no features remain after filtering, the app warns the user and falls back to showing all detected features.
+
+Manual Removal: • In addition to slider-based filtering, offer a multiselect widget for the user to manually remove specific features from the DataFrame.
+
+Interactive Deletion via Image Overlays
+
+Clickable Overlays: • Use an interactive Plotly figure to display the SEM image with overlaid polygon outlines (from the contour approximation) and feature index annotations. • The user can click on the annotations (or outlines) to “delete” unwanted features directly, with the corresponding rows being removed from the results DataFrame immediately.
+
+Proper Boundary Representation: • The overlay will now draw the boundaries as polygons rather than simple rectangles so that the feature shape is more accurately represented.
+
+D. Enhanced Profilometer Analysis
+Interactive Profile Visualization
+
+Display raw and smoothed line profiles using Plotly charts for their built‑in zoom, pan, and hover capabilities.
+
+Draggable Vertical Reference Markers
+
+Provide interactive vertical reference lines (implemented via sliders and/or Plotly annotations) on the profilometer trace.
+
+As the user moves these markers, automatically recompute region‑based metrics: • The height difference (delta z) between the highest and lowest points in the selected region. • The slope between the nearest local maximum and minimum. • The corresponding angle (via an arctan calculation), mimicking a dektak profilometer’s behavior.
+
+SEMs as Input for Profilometer
+
+Allow the user to import an extracted SEM line profile (from the SEM tab’s “Line Profile” mode) to be further analyzed in the Profilometer section.
+
+E. Export and Data Handling
+CSV Export:
+
+Export each image’s results (or the combined batch results) as CSV files.
+
+Optional Session Export:
+
+Export the session configuration (thresholding choices, filtering settings, scale factor, etc.) as JSON for reproducibility if desired.
+
+F. Comprehensive Tutorial and Documentation
+Detailed Workflow Documentation:
+
+The Tutorial tab will explain each step in the process:
+
+How to calibrate scale by drawing over the scale bar and entering the known length.
+
+How to select preprocessing options and thresholding methods.
+
+How to choose between Full Image and Line Profile modes and what that means.
+
+What each feature type represents: Dots, Array, Ellipse, Gratings, Arbitrary.
+
+How to adjust filtering settings and remove features interactively.
+
+How to set vertical reference markers on the profilometer trace and measure parameters such as delta height, slope, and angle.
+
+Usage Examples:
+
+The Tutorial includes examples (or references to example images) that show expected outcomes—for instance, how to interpret groove and grating line analyses—and provides troubleshooting guidance (e.g., what to do if “No features met filtering criteria” appears).
+
+3. Overall Final Deliverable
+The final system will be a deploy‑ready, integrated metrology tool with:
+
+Robust File Handling: Seamless upload of SEM images and profilometer traces.
+
+Interactive Preprocessing & Scale Calibration: Drawing on a canvas, specifying a known length, and applying multiple thresholding methods.
+
+Advanced, Feature‑Type Specific Analysis: Tailored computation for Dots, Array, Ellipse (with orientation), Gratings (with FFT pitch detection), and Arbitrary features.
+
+Real-Time, Interactive Filtering & Feature Management: With sliders, individual checkboxes for filters, and clickable image overlays to remove unwanted features.
+
+Enhanced Profilometer Analysis: Interactive Plotly traces, draggable vertical markers for defining measurement regions, and computed metrics such as height difference, slope, and angle.
+
+Flexible Data Export: CSV outputs for feature data and optionally exporting session settings.
+
+In‑Depth Tutorial: A comprehensive help section guiding the user through the entire workflow and explaining every control and computed metric.
 
 
-# pip install streamlit plotly opencv-python-headless numpy pandas scipy streamlit-drawable-canvas streamlit-plotly-events pillow
+
+================================
+Comments
+================================
+I. Original Vision & Core Functionality
+File Upload & Basic Processing
+
+SEM Images: • Upload one or multiple SEM images (with options for batch mode). • Options to choose a full image or manually select an ROI.
+
+Profilometer Traces: • Upload trace files (CSV, XLS, TXT) for stylus profilometer analysis.
+
+Basic Measurements: • For each detected feature (via contour detection), compute metrics such as Area, Width, Height, Aspect Ratio, and (initially) Groove Depth, Ra (roughness from top & bottom), and Sidewall Angle.
+
+Overlay and Export
+
+Display processed images with overlaid bounding boxes (or contours) and annotated feature indices.
+
+Provide an export of results as CSV (and a basic tutorial/help section).
+
+II. Enhancements & Requested Updates (New Revised Plan)
+A. Interactive User Controls and Processing Options
+Scale Measurement Improvements:
+
+Interactive Calibration: • Use a drawable canvas (via a library such as st-drawable-canvas) so the user can draw a line directly over the visible (embedded) scale bar or an optionally uploaded “scale image.” • Provide a text input (supporting three decimal places) for the known real‑world length (in µm). • Compute and display the conversion factor (µm per pixel), with the option to override manually.
+
+Preprocessing & Thresholding:
+
+Multiple Thresholding Methods: • Offer a drop‑down with choices: “None”, “Fixed”, “Adaptive”, and “Otsu”. • If “Fixed” is selected, let the user adjust a fixed threshold value with a slider; if “Adaptive” is selected, let them adjust block size and constant.
+
+Additional Preprocessing: • Options for Gaussian blur (with adjustable kernel size) and inversion.
+
+Selectable Analysis Modes:
+
+Full Image vs. Line Profile: • Allow the user to choose between extracting the full vertical profile of each detected feature or a “Line Profile” that separately captures a narrow vertical profile (for groove depth/roughness) and a horizontal profile (for linewidth measurement). • Offer an option (a button) to extract a SEM line profile that can then be transferred to the Profilometer tab for further analysis.
+
+B. Advanced Feature Detection and Analysis
+Feature-Type Specific Analysis:
+
+Multiple Feature Types: • Support “Dots,” “Array,” “Ellipse,” “Gratings,” and “Arbitrary.” • Dots, Array, and Arbitrary use standard contour‐based metrics. • For Ellipse features, apply ellipse fitting (cv2.fitEllipse) to extract orientation and more precise aspect ratio. • For Gratings, incorporate FFT‑based pitch detection to compute the spacing (pitch) from the horizontal intensity profile.
+
+Accurate Boundary Extraction: • Use contour approximation (e.g., cv2.approxPolyDP) so that features are outlined by polygons rather than simple rectangular bounding boxes.
+
+Advanced Measurement Computations:
+
+Ensure that “Ra Top” and “Ra Bottom” are computed from the correct portions of the vertical profile (for example, in a well‑processed image, one area corresponds to the groove and one to the grating line).
+
+Different metrics (e.g., measured widths, heights) are computed based on the analysis mode.
+
+C. Interactive Filtering and Feature Management
+Filtering Controls
+
+Individual Criteria with Activation Toggles: • In the sidebar, provide sliders (which are double‑click editable) and number inputs for filtering by Area, Width, Height, Aspect Ratio, Solidity, and Circularity. • Additionally, for Elliptical features include Orientation filters. • Each filter comes with its own checkbox so that the user can activate or deactivate it.
+
+Dynamic Feedback: • Filtering adjustments are applied in real time; if no features pass the filters, a warning is issued and detected features are shown as a fallback.
+
+Interactive Deletion:
+
+Clickable Overlays: • Over the SEM image, display the detected features using an interactive Plotly figure that draws polygons (based on the contour approximation) along with clearly visible index annotations. • Allow the user to click on a feature’s annotation (or its outline) to remove that feature from the final DataFrame automatically.
+
+Manual Removal: • Also provide a multiselect widget to manually remove features by index.
+
+D. Profilometer Tab Enhancements
+Interactive Trace Visualization:
+
+Display raw and smoothed profilometer traces as Plotly charts with built‑in zoom and pan.
+
+Draggable Reference Markers:
+
+Add interactive vertical reference lines (implemented via sliders or Plotly annotations) so that the user can define a region for detailed analysis.
+
+When the reference markers are adjusted, automatically calculate and display metrics for that region, including the vertical height difference (delta z), the slope, and the corresponding angle (mimicking a dektak profilometer).
+
+SEMs to Profilometer Transfer:
+
+Allow extracting a line profile from an SEM image (in the “Line Profile” mode) that can be seamlessly transferred to the Profilometer tab for further measurement.
+
+E. Export & Session Handling
+CSV Export:
+
+Export individual image’s feature data as CSV files and allow batch combined CSV export.
+
+Session Configuration:
+
+Optionally export the session configuration as JSON for reproducibility.
+
+F. Expanded Tutorial & Documentation
+Detailed Instructions:
+
+The Tutorial tab will include step‑by‑step instructions covering the entire workflow—from scale calibration and image preprocessing to feature detection, filtering, interactive deletion, and profilometer analysis.
+
+Clear definitions and examples of each feature type (Dots, Array, Ellipse, Gratings, Arbitrary) will be provided.
+
+Usage Examples:
+
+Describe how to calibrate scale, choose preprocessing options, adjust thresholds, delete unwanted features, and transfer SEM line profiles to the Profilometer section.
+
+Explain how the vertical reference lines in the profilometer work to compute height differences, slopes, and angles.
+
+III. Summary
+The new revised plan builds on the original core functionality and expands it with:
+
+Fully interactive scale calibration using a drawable canvas and known-length input.
+
+Expanded thresholding options (Fixed, Adaptive, Otsu, None) along with full preprocessing controls.
+
+Selectable analysis modes for either a full-image profile or a dedicated line profile extraction.
+
+Comprehensive feature detection that adapts based on the chosen feature type (Dots, Array, Ellipse, Gratings, and Arbitrary) with specialized processing (ellipse fitting and FFT for gratings).
+
+Interactive filtering with individual activation checkboxes and editable slider/numerical inputs.
+
+Interactive feature deletion from image overlays via clickable annotations.
+
+Enhanced Profilometer tab featuring interactive Plotly charts with draggable vertical reference markers that compute additional metrics (height difference, slope, angle).
+
+Data export functionality (CSV for results, JSON for session configuration) and an updated comprehensive Tutorial tab.
+
+This plan incorporates all feedback provided since yesterday and earlier, ensuring that the end product is a seamless, user‑friendly, lab‑grade metrology tool ready for deployment.
+
+
+==============================================================
+Code below
+===========================================================
 
 
 import streamlit as st
@@ -48,19 +294,11 @@ import base64
 import os
 from PIL import Image
 
-# For capturing Plotly click events
 from streamlit_plotly_events import plotly_events
-# For drawable canvas (scale calibration)
 from streamlit_drawable_canvas import st_canvas
 
-#############################################
-# SETTINGS & PAGE CONFIGURATION
-#############################################
 st.set_page_config(page_title="SEM & Profilometer Analyzer", layout="wide")
 
-#############################################
-# UTILITY FUNCTIONS: PROFILOMETER ANALYSIS
-#############################################
 def parse_profilometer(file):
     try:
         if file.name.endswith(".csv"):
@@ -104,11 +342,7 @@ def extract_profile_metrics(df):
         "Ra Top (µm)": round(top_rough,4)
     }, x, y, y_smooth
 
-#############################################
-# UTILITY FUNCTIONS: SEM IMAGE ANALYSIS
-#############################################
 def decode_image(uploaded_file):
-    # Read raw, then decode via OpenCV
     bytes_data = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     return cv2.imdecode(bytes_data, cv2.IMREAD_GRAYSCALE)
 
@@ -116,24 +350,17 @@ def apply_roi(img, x, y, w, h):
     return img[y:y+h, x:x+w]
 
 def detect_contours(img):
-    # Preprocessing for contour detection
     blur = cv2.GaussianBlur(img, (5,5), 0)
     _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours
 
-#############################################
-# ANALYZE CONTOUR (with full and line modes, and feature-type switches)
-#############################################
 def analyze_contour(c, scale, gray_img, grayscale_to_micron=None, analysis_mode="full", feature_type="Arbitrary"):
-    # Compute area in physical units:
     area = cv2.contourArea(c) * (scale**2)
     x, y, w, h = cv2.boundingRect(c)
     aspect_ratio = round(w/h,3) if h>0 else 0
-    # Instead of simple rectangle, compute contour polygon approximation:
     approx = cv2.approxPolyDP(c, 0.01*cv2.arcLength(c,True), True)
     
-    # For ellipse features, try fitting an ellipse:
     ellipse_fit = None
     if feature_type=="Ellipse" and len(c) >= 5:
         try:
@@ -142,14 +369,12 @@ def analyze_contour(c, scale, gray_img, grayscale_to_micron=None, analysis_mode=
             ellipse_fit = None
 
     if analysis_mode=="full":
-        # Use vertical profile from the cropped region:
         cropped = gray_img[y:y+h, x:x+w]
         profile = np.mean(cropped, axis=1)
         L = len(profile)
         win = min(11, L if L%2==1 else L-1)
         smooth_vals = profile if win<3 else scipy.signal.savgol_filter(profile, win, 2)
         norm = (smooth_vals - np.min(smooth_vals))/(np.max(smooth_vals)-np.min(smooth_vals)+1e-6)
-        # Define top rough region as where norm >0.85 and bottom as <0.15
         top_idx = np.where(norm>0.85)[0]
         bottom_idx = np.where(norm<0.15)[0]
         groove_depth = np.max(smooth_vals) - np.min(smooth_vals)
@@ -183,7 +408,6 @@ def analyze_contour(c, scale, gray_img, grayscale_to_micron=None, analysis_mode=
         if ellipse_fit is not None:
             result["Orientation (deg)"] = round(ellipse_fit[-1],1)
         if feature_type=="Gratings":
-            # For gratings, also extract horizontal profile and compute FFT pitch
             cropped = gray_img[y:y+h, x:x+w]
             horiz_profile = np.mean(cropped, axis=0)
             pitch = fft_pitch_detection(horiz_profile, scale)
@@ -191,7 +415,6 @@ def analyze_contour(c, scale, gray_img, grayscale_to_micron=None, analysis_mode=
         return result
 
     elif analysis_mode=="line":
-        # In line mode, extract a narrow vertical profile and horizontal profile:
         cropped = gray_img[y:y+h, x:x+w]
         col_idx = cropped.shape[1]//2
         vertical_profile = np.mean(cropped[:, max(0,col_idx-1):min(cropped.shape[1],col_idx+2)], axis=1)
@@ -230,9 +453,6 @@ def analyze_contour(c, scale, gray_img, grayscale_to_micron=None, analysis_mode=
             result["Orientation (deg)"] = round(ellipse_fit[-1],1)
         return result
 
-#############################################
-# FFT-BASED PITCH DETECTION (for Gratings)
-#############################################
 def fft_pitch_detection(profile, scale):
     signal = profile - np.mean(profile)
     fft_res = np.fft.fft(signal)
@@ -244,13 +464,8 @@ def fft_pitch_detection(profile, scale):
     pitch = 1.0/freq if freq != 0 else 0
     return pitch
 
-#############################################
-# PLOTTING FUNCTION: Display image with contour polygons
-#############################################
 def plot_image_with_polygons(img, contours, selected_indices=[]):
-    # We'll draw the approximated polygon for each contour.
     fig = go.Figure()
-    # Convert img to base64 and add as background:
     _, im_arr = cv2.imencode('.png', img)
     im_bytes = im_arr.tobytes()
     im_b64 = base64.b64encode(im_bytes).decode()
@@ -263,16 +478,13 @@ def plot_image_with_polygons(img, contours, selected_indices=[]):
             sizing="stretch", layer="below"
         )
     )
-    # For each contour, compute polygon string
     for idx, c in enumerate(contours):
         if idx in selected_indices:
             continue
         approx = cv2.approxPolyDP(c, 0.01*cv2.arcLength(c,True), True)
-        # Build path string: M x,y L x,y ... Z
         path = ""
         for pt in approx:
             x_pt, y_pt = pt[0]
-            # Flip y coordinate (Plotly coordinate origin bottom-left)
             y_pt_plot = img.shape[0] - y_pt
             if path=="":
                 path = f"M{x_pt},{y_pt_plot} "
@@ -284,8 +496,6 @@ def plot_image_with_polygons(img, contours, selected_indices=[]):
             path=path,
             line=dict(color="red", width=3)
         )
-        # Add an annotation with the index
-        # Using the centroid of the contour:
         M = cv2.moments(c)
         if M["m00"] != 0:
             cx = int(M["m10"]/M["m00"])
@@ -306,9 +516,6 @@ def plot_image_with_polygons(img, contours, selected_indices=[]):
     fig.update_layout(clickmode="event+select", margin=dict(l=0,r=0,t=0,b=0))
     return fig
 
-#############################################
-# REPORT & EXPORT FUNCTIONS
-#############################################
 def generate_html_report(df):
     html = "<html><head><title>SEM Analysis Report</title></head><body>"
     html += "<h1>SEM Analysis Report</h1>"
@@ -322,27 +529,16 @@ def export_csv(df):
 def export_session_config(config_dict):
     return json.dumps(config_dict, indent=4)
 
-#############################################
-# GLOBAL: To hold extracted SEM line profile for transport to Profilometer
-#############################################
 if "sem_line_profile" not in st.session_state:
     st.session_state.sem_line_profile = None
 
-#############################################
-# MAIN UI: TABS
-#############################################
 tab1, tab2, tab3 = st.tabs(["📷 SEM Image", "📏 Profilometer", "🧠 Tutorial"])
 
-############################
-# SEM IMAGE TAB
-############################
 with tab1:
     st.header("SEM Image Analysis")
     
-    # --- Scale Measurement Tool ---
     st.subheader("Scale Measurement Tool")
     st.markdown("If your SEM image contains a scale bar, use the canvas below. (The uploaded scale image will appear as background if available.)")
-    # Optionally, user can upload a separate scale image:
     scale_img_file = st.file_uploader("Upload Scale Image (optional)", type=["png","jpg","jpeg"], key="scaleimg", help="Upload a close-up showing the scale bar")
     if scale_img_file is not None:
         scale_pil = Image.open(scale_img_file)
@@ -377,7 +573,6 @@ with tab1:
     else:
         st.info("Draw a line over the scale bar (if visible) to calibrate the scale.")
     
-    # --- File Upload for SEM Images ---
     master_batch = st.checkbox("Enable Batch Mode (multiple SEM images)", value=False)
     if master_batch:
         files = st.file_uploader("Upload SEM images", type=["png","jpg","jpeg","tif","tiff"], accept_multiple_files=True, key="sem_files")
@@ -385,7 +580,6 @@ with tab1:
         file = st.file_uploader("Upload SEM image", type=["png","jpg","jpeg","tif","tiff"], key="sem_file")
         files = [file] if file is not None else []
     
-    # Proceed if files are uploaded:
     if files:
         st.subheader("Preprocessing Options")
         preprocess = st.checkbox("Apply Preprocessing", value=False)
@@ -399,7 +593,6 @@ with tab1:
             elif threshold_option=="Adaptive":
                 adaptive_block = st.slider("Adaptive Block Size (odd)", min_value=3, max_value=31, value=11, step=2)
                 adaptive_C = st.slider("Adaptive Constant", min_value=0, max_value=20, value=2, step=1)
-            # Otsu thresholding will be done automatically.
         else:
             do_clahe = do_blur = do_inversion = False
             threshold_option = "None"
@@ -407,7 +600,6 @@ with tab1:
         trim_bottom = st.number_input("Smart image trimming: Crop bottom (px)", min_value=0, value=0)
         use_fft = st.checkbox("Use FFT-based pitch detection (for Gratings)", value=False)
     
-        # Scale: use computed scale to 3 decimals or manual input
         if computed_scale is not None:
             scale = computed_scale
         else:
@@ -422,11 +614,9 @@ with tab1:
         analysis_mode = st.radio("Select Analysis Mode", ["Full Image", "Line Profile"]).lower()
         feature_type = st.selectbox("Select Feature Type", ["Dots", "Array", "Ellipse", "Gratings", "Arbitrary"])
     
-        # For Gratings, if selected:
         if use_fft and feature_type=="Gratings":
             fft_placeholder = st.empty()
     
-        # FILTERING SETTINGS with individual toggles and editable numbers
         st.sidebar.subheader("Feature Filtering Settings")
         apply_filtering = st.sidebar.checkbox("Activate Filtering", value=True)
         use_area_filter = st.sidebar.checkbox("Area Filter", value=True)
@@ -437,7 +627,6 @@ with tab1:
         use_circularity_filter = st.sidebar.checkbox("Circularity Filter", value=True)
         use_orientation_filter = st.sidebar.checkbox("Orientation Filter (for Ellipses)", value=(feature_type=="Ellipse"))
     
-        # Using number input (editable) for each filter threshold:
         min_area = st.sidebar.number_input("Min Area (µm²)", min_value=0.0, max_value=1000.0, value=0.0, step=1.0) if use_area_filter else 0
         max_area = st.sidebar.number_input("Max Area (µm²)", min_value=0.0, max_value=1000.0, value=1000.0, step=5.0) if use_area_filter else 1e6
         min_width = st.sidebar.number_input("Min Width (µm)", min_value=0.0, max_value=500.0, value=0.0, step=1.0) if use_width_filter else 0
@@ -459,12 +648,10 @@ with tab1:
         all_results = []
         batch_names = []
     
-        # Process each uploaded image:
         for uploaded_file in files:
             if uploaded_file is None:
                 continue
             img = decode_image(uploaded_file)
-            # Preprocessing
             if preprocess:
                 if do_clahe:
                     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
@@ -484,7 +671,6 @@ with tab1:
             if trim_bottom > 0:
                 img = img[:-trim_bottom, :]
     
-            # ROI Selection:
             use_roi = st.checkbox("Use ROI?", value=False, key=uploaded_file.name)
             if use_roi:
                 roi_x = st.number_input("ROI X", 0, img.shape[1], 0, key=uploaded_file.name+"roi_x")
@@ -502,7 +688,6 @@ with tab1:
                 fft_pitch_val = fft_pitch_detection(profile_fft, scale)
                 st.write(f"Estimated Grating Pitch: {fft_pitch_val:.3f} µm")
     
-            # Detect contours:
             contours = detect_contours(img_proc)
             if not contours:
                 st.warning(f"No contours detected in {uploaded_file.name}.")
@@ -512,7 +697,6 @@ with tab1:
             for idx, c in enumerate(contours):
                 metrics = analyze_contour(c, scale, img_proc, grayscale_to_micron, analysis_mode, feature_type)
                 output.append(metrics)
-                # Use the approximated polygon bounding box (fallback to rectangle if needed)
                 x0, y0, w0, h0 = cv2.boundingRect(c)
                 boxes.append({"index": idx, "x": x0, "y": y0, "w": w0, "h": h0})
     
@@ -531,7 +715,6 @@ with tab1:
                             pass
             updated_output = [o for idx, o in enumerate(output) if idx not in del_indices]
     
-            # Filtering: If filtering yields empty list, fallback to updated_output.
             if apply_filtering:
                 if feature_type=="Ellipse":
                     filtered_output = [ o for o in updated_output if (
@@ -563,7 +746,6 @@ with tab1:
     
             df = pd.DataFrame(filtered_output)
             df["Image"] = uploaded_file.name
-            # Allow manual deletion via multiselect:
             indices_to_remove = st.multiselect(f"Manually remove features from {uploaded_file.name} (by index)", df.index.tolist())
             if indices_to_remove:
                 df = df.drop(indices_to_remove)
@@ -582,7 +764,6 @@ with tab1:
                                title=f"{plot_metric} vs Feature Index")
             st.plotly_chart(fig_line, use_container_width=True)
     
-            # Interactive Ra visualization:
             ra_bottom_col = "Ra Bottom (" + ("µm" if grayscale_to_micron is not None else "") + ")"
             ra_top_col = "Ra Top (" + ("µm" if grayscale_to_micron is not None else "") + ")"
             if ra_bottom_col in df.columns and ra_top_col in df.columns:
@@ -592,18 +773,14 @@ with tab1:
                                  title="Roughness (Ra) at Top vs Bottom")
                 st.plotly_chart(fig_bar, use_container_width=True)
     
-            # Button to export CSV of this image's features:
             csv_data = export_csv(df)
             st.download_button("Export CSV for This Image", csv_data, uploaded_file.name+"_features.csv", "text/csv")
     
-            # Optionally, allow extracting a line profile from SEM to transfer to the Profilometer tab:
             if analysis_mode=="line":
                 if st.button(f"Extract SEM Line Profile from {uploaded_file.name}"):
-                    # Save the average vertical profile for this image to session_state:
                     st.session_state.sem_line_profile = np.mean(apply_roi(img, 0, 0, img.shape[1], img.shape[0]), axis=1)
                     st.success("Line profile extracted and stored for Profilometer analysis.")
     
-        # Combined batch export:
         if master_batch and all_results:
             combined_df = pd.concat(all_results, ignore_index=True)
             st.subheader("Combined Batch Report")
@@ -653,9 +830,6 @@ with tab1:
     else:
         st.info("Please upload at least one SEM image.")
         
-###############################
-# STYLUS PROFILOMETER TAB
-###############################
 with tab2:
     st.header("Stylus Profilometer Analysis")
     up = st.file_uploader("Upload profilometer trace (.csv, .xlsx, .txt)", type=["csv", "txt", "xls", "xlsx"], key="prof_file")
@@ -674,18 +848,15 @@ with tab2:
             ref_left = st.slider("Left Reference (µm)", min_value=float(min(x)), max_value=float(max(x)), value=float(min(x)))
             ref_right = st.slider("Right Reference (µm)", min_value=float(min(x)), max_value=float(max(x)), value=float(max(x)))
             st.write(f"Analysis Region: [{ref_left:.2f}, {ref_right:.2f}] µm")
-            # Extract region of interest from the smoothed profile:
             ind_left = np.searchsorted(x, ref_left)
             ind_right = np.searchsorted(x, ref_right)
             region_x = x[ind_left:ind_right] if ind_right>ind_left else x
             region_y = y_smooth[ind_left:ind_right] if ind_right>ind_left else y_smooth
             if len(region_y)>0:
-                # Compute measurement metrics: delta z, slope, angle (simple linear fit)
                 delta_z = np.max(region_y) - np.min(region_y)
                 slope = np.polyfit(region_x, region_y, 1)[0]
                 angle = np.degrees(np.arctan(slope))
                 st.write(f"Delta Height: {delta_z:.3f} µm, Slope: {slope:.3f} µm/µm, Angle: {angle:.1f}°")
-            # Optionally, if an SEM line profile was extracted, show it here:
             if st.session_state.sem_line_profile is not None:
                 st.subheader("Imported SEM Line Profile")
                 region_prof = st.session_state.sem_line_profile
@@ -696,12 +867,8 @@ with tab2:
     else:
         st.info("Upload a profilometer trace file for analysis.")
         
-#######################
-# TUTORIAL TAB
-#######################
 with tab3:
     st.markdown("""
-    ### SEM + Profilometer Analyzer Tutorial
 
     **SEM Tab:**
     - **Scale Measurement:**  
@@ -741,4 +908,3 @@ with tab3:
     - Use the vertical reference sliders to define the region for measurement. The tool calculates the height difference, slope, and angle for that region.
     
     Enjoy using this integrated metrology tool!
-    """)
