@@ -612,7 +612,7 @@ with tab2:
                     if region_y.size > 1:
                         peaks, _ = find_peaks(region_y)
                         valleys, _ = find_peaks(-region_y)
-                    else:
+                    else:
                         peaks, valleys = np.array([]), np.array([])
                     return peaks, valleys
 
