@@ -646,7 +646,7 @@ with tab2:
                 ra_bottom = np.mean(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
                 ra_bottom_std = np.std(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
 
-                st.subheader("Calculated Metrics")
+                #st.subheader("Calculated Metrics")
                 metrics = {
                     "Δz (avg)": delta_z,
                     "Δz (std)": delta_z_std,
@@ -666,14 +666,30 @@ with tab2:
                     "Ra Bottom (std)": ra_bottom_std
                 }
                 # Format metrics as "mean ± std"
+                
+                # Define units for each metric base name
+                units = {
+                    "Δz": "µm",
+                    "θ": "deg",
+                    "Avg Max Z": "µm",
+                    "Avg Min Z": "µm",
+                    "Top Width": "µm",
+                    "Bottom Width": "µm",
+                    "Ra Top": "µm",
+                    "Ra Bottom": "µm"
+                }
+                
+                # Format metrics as "mean ± std" with units
                 formatted_metrics = {}
                 for key in metrics:
-                    if " (avg)" in key:
-                        base_key = key.replace(" (avg)", "")
-                        std_key = key.replace(" (avg)", " (std)")
+                    if " (avg" in key:
+                        base_key = key.split(" (avg")[0]
+                        std_key = key.replace(" (avg", " (std")
                         mean_val = metrics[key]
                         std_val = metrics.get(std_key, 0)
-                        formatted_metrics[base_key] = f"{mean_val:.4f} ± {std_val:.4f}"
+                        unit = units.get(base_key, "")
+                        label = f"{base_key} [{unit}]" if unit else base_key
+                        formatted_metrics[label] = f"{mean_val:.4f} ± {std_val:.4f}"
                 
                 # Create and display DataFrame
                 df_metrics = pd.DataFrame.from_dict(formatted_metrics, orient='index', columns=["Mean ± Std"])
@@ -682,6 +698,7 @@ with tab2:
                 
                 st.subheader("Calculated Metrics (Mean ± Std)")
                 st.dataframe(df_metrics, use_container_width=True)
+
 
 
             if st.session_state.sem_line_profile is not None:
