@@ -604,7 +604,7 @@ with tab2:
                 region_y = np.asarray(region_y).flatten()
 
                 try:
-                    if region_y.size == 0 or not np.issubdtype(region_y.dtype, np.number):
+                    if region_y.size == 0 or not np.issubdtype(region_y.dtype, np.number):
                         raise ValueError("region_y is empty or not numeric.")
                         peaks, _ = find_peaks(region_y)
                         valleys, _ = find_peaks(-region_y)
