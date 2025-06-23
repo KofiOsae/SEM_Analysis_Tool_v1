@@ -708,7 +708,7 @@ with tab2:
             st.subheader("Calculated Metrics (Mean ± Std)")
             st.dataframe(df_metrics, use_container_width=True)
         
-         except Exception as e:
+           except Exception as e:
             st.error(f"Error processing metrics: {e}")
 
         else:
