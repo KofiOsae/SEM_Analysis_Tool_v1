@@ -612,7 +612,7 @@ with tab2:
                     valleys, _ = find_peaks(-region_y)
                     max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
                     min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
-                else:
+                elif:
                     peaks, valleys = np.array([]), np.array([])
                     max_vals = min_vals = np.array([0.0])
                 else:
