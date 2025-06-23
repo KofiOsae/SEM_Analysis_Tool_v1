@@ -603,7 +603,7 @@ with tab2:
                 theta_std = np.std(np.degrees(np.arctan(slopes)))
             
             # Ensure region_y is defined and valid
-           try:
+            try:
               region_x = np.asarray(region_x, dtype=float).flatten()
               region_y = np.asarray(region_y, dtype=float).flatten()
               mask = np.isfinite(region_x) & np.isfinite(region_y)
@@ -708,8 +708,8 @@ with tab2:
               st.subheader("Calculated Metrics (Mean ± Std)")
               st.dataframe(df_metrics, use_container_width=True)
         
-           except Exception as e:
-            st.error(f"Error processing metrics: {e}")
+            except Exception as e:
+             st.error(f"Error processing metrics: {e}")
 
         else:
             st.warning("Invalid profilometer file format.")
