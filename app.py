@@ -591,6 +591,16 @@ with tab2:
 
             region_x = x[m_index:r_index]
             region_y = y_smooth[m_index:r_index]
+
+            if len(region_y) > 1:
+                delta_z = np.max(region_y) - np.min(region_y)
+                delta_z_std = np.std(region_y)
+        
+                dz = np.diff(region_y)
+                dx = np.diff(region_x)
+                slopes = dz / dx
+                theta = np.degrees(np.arctan(np.max(np.abs(slopes))))
+                theta_std = np.std(np.degrees(np.arctan(slopes)))
             
             # Ensure region_y is defined and valid
             try:
