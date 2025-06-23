@@ -604,109 +604,109 @@ with tab2:
             
             # Ensure region_y is defined and valid
            try:
-            region_x = np.asarray(region_x, dtype=float).flatten()
-            region_y = np.asarray(region_y, dtype=float).flatten()
-            mask = np.isfinite(region_x) & np.isfinite(region_y)
-            region_x = region_x[mask]
-            region_y = region_y[mask]
-        
-            delta_z = np.max(region_y) - np.min(region_y)
-            delta_z_std = np.std(region_y)
-        
-            dz = np.diff(region_y)
-            dx = np.diff(region_x)
-            slopes = dz / dx
-            theta_max = np.degrees(np.arctan(np.max(np.abs(slopes))))
-            theta_std = np.std(np.degrees(np.arctan(slopes)))
-        
-            peaks, _ = find_peaks(region_y)
-            valleys, _ = find_peaks(-region_y)
-        
-            # Top widths and Ra Top
-            top_widths = []
-            ra_tops = []
-            for i in range(len(peaks) - 1):
-                i1, i2 = peaks[i], peaks[i + 1]
-                width = region_x[i2] - region_x[i1]
-                segment = region_y[i1:i2+1]
-                ra = np.mean(np.abs(segment - np.mean(segment)))
-                top_widths.append(width)
-                ra_tops.append(ra)
-        
-            # Bottom widths and Ra Bottom
-            bottom_widths = []
-            ra_bottoms = []
-            for i in range(len(valleys) - 1):
-                i1, i2 = valleys[i], valleys[i + 1]
-                width = region_x[i2] - region_x[i1]
-                segment = region_y[i1:i2+1]
-                ra = np.mean(np.abs(segment - np.mean(segment)))
-                bottom_widths.append(width)
-                ra_bottoms.append(ra)
-        
-            # Sidewall angles between each peak-valley pair
-            sidewall_angles = []
-            for peak in peaks:
-                # Find nearest valley to the right
-                right_valleys = valleys[valleys > peak]
-                if len(right_valleys) > 0:
-                    valley = right_valleys[0]
-                    dx = region_x[valley] - region_x[peak]
-                    dz = region_y[valley] - region_y[peak]
-                    angle = np.degrees(np.arctan2(abs(dz), abs(dx)))
-                    sidewall_angles.append(angle)
-        
-            theta_sidewall = np.mean(sidewall_angles) if sidewall_angles else 0
-            theta_sidewall_std = np.std(sidewall_angles) if sidewall_angles else 0
-        
-            # Metrics dictionary
-            metrics = {
-                "Δz (avg)": delta_z,
-                "Δz (std)": delta_z_std,
-                "θ Max (avg)": theta_max,
-                "θ Max (std)": theta_std,
-                "θ Sidewall (avg)": theta_sidewall,
-                "θ Sidewall (std)": theta_sidewall_std,
-                "Top Width (avg)": np.mean(top_widths) if top_widths else 0,
-                "Top Width (std)": np.std(top_widths) if top_widths else 0,
-                "Bottom Width (avg)": np.mean(bottom_widths) if bottom_widths else 0,
-                "Bottom Width (std)": np.std(bottom_widths) if bottom_widths else 0,
-                "Ra Top (avg)": np.mean(ra_tops) if ra_tops else 0,
-                "Ra Top (std)": np.std(ra_tops) if ra_tops else 0,
-                "Ra Bottom (avg)": np.mean(ra_bottoms) if ra_bottoms else 0,
-                "Ra Bottom (std)": np.std(ra_bottoms) if ra_bottoms else 0
-            }
-        
-            # Units for display
-            units = {
-                "Δz": "µm",
-                "θ Max": "deg",
-                "θ Sidewall": "deg",
-                "Top Width": "µm",
-                "Bottom Width": "µm",
-                "Ra Top": "µm",
-                "Ra Bottom": "µm"
-            }
-        
-            # Format metrics as "mean ± std [unit]"
-            formatted_metrics = {}
-            for key in metrics:
-                if " (avg)" in key:
-                    base_key = key.replace(" (avg)", "")
-                    std_key = key.replace(" (avg)", " (std)")
-                    mean_val = metrics[key]
-                    std_val = metrics.get(std_key, 0)
-                    unit = units.get(base_key, "")
-                    label = f"{base_key} [{unit}]" if unit else base_key
-                    formatted_metrics[label] = f"{mean_val:.4f} ± {std_val:.4f}"
-        
-            # Display DataFrame
-            df_metrics = pd.DataFrame.from_dict(formatted_metrics, orient='index', columns=["Mean ± Std"])
-            df_metrics.reset_index(inplace=True)
-            df_metrics.columns = ["Metric", "Mean ± Std"]
-        
-            st.subheader("Calculated Metrics (Mean ± Std)")
-            st.dataframe(df_metrics, use_container_width=True)
+                region_x = np.asarray(region_x, dtype=float).flatten()
+                region_y = np.asarray(region_y, dtype=float).flatten()
+                mask = np.isfinite(region_x) & np.isfinite(region_y)
+                region_x = region_x[mask]
+                region_y = region_y[mask]
+            
+                delta_z = np.max(region_y) - np.min(region_y)
+                delta_z_std = np.std(region_y)
+            
+                dz = np.diff(region_y)
+                dx = np.diff(region_x)
+                slopes = dz / dx
+                theta_max = np.degrees(np.arctan(np.max(np.abs(slopes))))
+                theta_std = np.std(np.degrees(np.arctan(slopes)))
+            
+                peaks, _ = find_peaks(region_y)
+                valleys, _ = find_peaks(-region_y)
+            
+                # Top widths and Ra Top
+                top_widths = []
+                ra_tops = []
+                for i in range(len(peaks) - 1):
+                    i1, i2 = peaks[i], peaks[i + 1]
+                    width = region_x[i2] - region_x[i1]
+                    segment = region_y[i1:i2+1]
+                    ra = np.mean(np.abs(segment - np.mean(segment)))
+                    top_widths.append(width)
+                    ra_tops.append(ra)
+            
+                # Bottom widths and Ra Bottom
+                bottom_widths = []
+                ra_bottoms = []
+                for i in range(len(valleys) - 1):
+                    i1, i2 = valleys[i], valleys[i + 1]
+                    width = region_x[i2] - region_x[i1]
+                    segment = region_y[i1:i2+1]
+                    ra = np.mean(np.abs(segment - np.mean(segment)))
+                    bottom_widths.append(width)
+                    ra_bottoms.append(ra)
+            
+                # Sidewall angles between each peak-valley pair
+                sidewall_angles = []
+                for peak in peaks:
+                    # Find nearest valley to the right
+                    right_valleys = valleys[valleys > peak]
+                    if len(right_valleys) > 0:
+                        valley = right_valleys[0]
+                        dx = region_x[valley] - region_x[peak]
+                        dz = region_y[valley] - region_y[peak]
+                        angle = np.degrees(np.arctan2(abs(dz), abs(dx)))
+                        sidewall_angles.append(angle)
+            
+                theta_sidewall = np.mean(sidewall_angles) if sidewall_angles else 0
+                theta_sidewall_std = np.std(sidewall_angles) if sidewall_angles else 0
+            
+                # Metrics dictionary
+                metrics = {
+                    "Δz (avg)": delta_z,
+                    "Δz (std)": delta_z_std,
+                    "θ Max (avg)": theta_max,
+                    "θ Max (std)": theta_std,
+                    "θ Sidewall (avg)": theta_sidewall,
+                    "θ Sidewall (std)": theta_sidewall_std,
+                    "Top Width (avg)": np.mean(top_widths) if top_widths else 0,
+                    "Top Width (std)": np.std(top_widths) if top_widths else 0,
+                    "Bottom Width (avg)": np.mean(bottom_widths) if bottom_widths else 0,
+                    "Bottom Width (std)": np.std(bottom_widths) if bottom_widths else 0,
+                    "Ra Top (avg)": np.mean(ra_tops) if ra_tops else 0,
+                    "Ra Top (std)": np.std(ra_tops) if ra_tops else 0,
+                    "Ra Bottom (avg)": np.mean(ra_bottoms) if ra_bottoms else 0,
+                    "Ra Bottom (std)": np.std(ra_bottoms) if ra_bottoms else 0
+                }
+            
+                # Units for display
+                units = {
+                    "Δz": "µm",
+                    "θ Max": "deg",
+                    "θ Sidewall": "deg",
+                    "Top Width": "µm",
+                    "Bottom Width": "µm",
+                    "Ra Top": "µm",
+                    "Ra Bottom": "µm"
+                }
+            
+                # Format metrics as "mean ± std [unit]"
+                formatted_metrics = {}
+                for key in metrics:
+                    if " (avg)" in key:
+                        base_key = key.replace(" (avg)", "")
+                        std_key = key.replace(" (avg)", " (std)")
+                        mean_val = metrics[key]
+                        std_val = metrics.get(std_key, 0)
+                        unit = units.get(base_key, "")
+                        label = f"{base_key} [{unit}]" if unit else base_key
+                        formatted_metrics[label] = f"{mean_val:.4f} ± {std_val:.4f}"
+            
+                # Display DataFrame
+                df_metrics = pd.DataFrame.from_dict(formatted_metrics, orient='index', columns=["Mean ± Std"])
+                df_metrics.reset_index(inplace=True)
+                df_metrics.columns = ["Metric", "Mean ± Std"]
+            
+                st.subheader("Calculated Metrics (Mean ± Std)")
+                st.dataframe(df_metrics, use_container_width=True)
         
            except Exception as e:
             st.error(f"Error processing metrics: {e}")
