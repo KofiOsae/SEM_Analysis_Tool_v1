@@ -609,8 +609,8 @@ with tab2:
                         peaks, _ = find_peaks(region_y)
                         valleys, _ = find_peaks(-region_y)
                 except Exception as e:
-                peaks, valleys = np.array([]), np.array([])
-                st.warning(f"Peak detection skipped: {e}")
+                    peaks, valleys = np.array([]), np.array([])
+                    st.warning(f"Peak detection skipped: {e}")
 
                 max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
                 min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
