@@ -596,15 +596,16 @@ with tab2:
             try:
                 region_y = np.asarray(region_y, dtype=float).flatten()
                 region_y = region_y[np.isfinite(region_y)]
-              if region_y.size > 1:
-                 peaks, _ = find_peaks(region_y)
-                 valleys, _ = find_peaks(-region_y)
+                
+                if region_y.size > 1:
+                   peaks, _ = find_peaks(region_y)
+                   valleys, _ = find_peaks(-region_y)
              
-                 max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
-                 min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
+                   max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
+                   min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
               else:
-                 peaks = valleys = np.array([])
-                 max_vals = min_vals = np.array([0.0])
+                   peaks = valleys = np.array([])
+                   max_vals = min_vals = np.array([0.0])
             
              except Exception as e:
                  st.error(f"Error processing region_y: {e}")
