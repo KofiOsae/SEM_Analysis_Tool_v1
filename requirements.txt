@@ -1,0 +1,9 @@
+streamlit
+opencv-python-headless
+numpy
+pandas
+scipy
+plotly
+Pillow
+streamlit-drawable-canvas
+streamlit-plotly-events
