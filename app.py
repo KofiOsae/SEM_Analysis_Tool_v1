@@ -547,6 +547,7 @@ with tab1:
     else:
         st.info("Please upload at least one SEM image.")
         
+
 with tab2:
     st.header("Stylus Profilometer Analysis")
 
@@ -654,7 +655,7 @@ with tab2:
             st.warning("Invalid profilometer file format.")
     else:
         st.info("Upload a profilometer trace file for analysis.")
-        
+
 with tab3:
     st.markdown("""
 
