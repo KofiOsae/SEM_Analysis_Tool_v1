@@ -10,6 +10,7 @@ from io import StringIO, BytesIO
 import base64
 import os
 from PIL import Image
+from scipy.signal import find_peaks
 
 from streamlit_plotly_events import plotly_events
 from streamlit_drawable_canvas import st_canvas
