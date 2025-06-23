@@ -625,3 +625,4 @@ with tab3:
     - Use the vertical reference sliders to define the region for measurement. The tool calculates the height difference, slope, and angle for that region.
     
     Enjoy using this integrated metrology tool!
+    """)
