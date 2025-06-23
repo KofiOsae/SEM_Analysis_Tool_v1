@@ -602,11 +602,15 @@ with tab2:
                 theta_std = np.std(np.degrees(np.arctan(slopes)))
 
                 region_y = np.asarray(region_y).flatten()
-                if region_y.size == 0:
-                    peaks, valleys = np.array([]), np.array([])
-                else:
-                    peaks, _ = find_peaks(region_y)
-                    valleys, _ = find_peaks(-region_y)
+
+                try:
+                    if region_y.size == 0 or not np.issubdtype(region_y.dtype, np.number):
+                        raise ValueError("region_y is empty or not numeric.")
+                        peaks, _ = find_peaks(region_y)
+                        valleys, _ = find_peaks(-region_y)
+                except Exception as e:
+                peaks, valleys = np.array([]), np.array([])
+                st.warning(f"Peak detection skipped: {e}")
 
                 max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
                 min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
