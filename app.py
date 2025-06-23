@@ -257,7 +257,7 @@ with tab1:
     
     st.subheader("Scale Measurement Tool")
     st.markdown("If your SEM image contains a scale bar, use the canvas below. (The uploaded scale image will appear as background if available.)")
-    scale_img_file = st.file_uploader("Upload Scale Image (optional)", type=["png","jpg","jpeg"], key="scaleimg", help="Upload a close-up showing the scale bar")
+    scale_img_file = st.file_uploader("Upload Scale Image (optional)", type=["png","jpg","jpeg","tif", "tiff"], key="scaleimg", help="Upload a close-up showing the scale bar")
     if scale_img_file is not None:
         scale_pil = Image.open(scale_img_file)
     else:
