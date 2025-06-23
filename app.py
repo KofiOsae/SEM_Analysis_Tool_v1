@@ -653,7 +653,9 @@ with tab2:
         else:
             st.warning("Invalid profilometer file format.")
     else:
-        st.info("Upload a profilometer trace file for analysis.")with tab3:
+        st.info("Upload a profilometer trace file for analysis.")
+        
+with tab3:
     st.markdown("""
 
     **SEM Tab:**
