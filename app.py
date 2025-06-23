@@ -607,10 +607,10 @@ with tab2:
                 region_y = region_y[np.isfinite(region_y)]
                 
                 if region_y.size > 1:
-                    peaks, _ = find_peaks(region_y)
-                    valleys, _ = find_peaks(-region_y)
+                    peaks, _ = find_peaks(region_y)
+                    valleys, _ = find_peaks(-region_y)
                 else:
-                    peaks, valleys = np.array([]), np.array([])
+                    peaks, valleys = np.array([]), np.array([])
                 max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
                 min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
                 avg_max = np.mean(max_vals)
