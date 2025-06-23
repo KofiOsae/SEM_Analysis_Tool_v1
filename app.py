@@ -618,7 +618,7 @@ with tab2:
                         peaks = valleys = np.array([])
                         max_vals = min_vals = np.array([0.0])
 
-                    except Exception as e:
+                except Exception as e:
                         st.error(f"Error processing region_y: {e}")
                         peaks = valleys = np.array([])
                         max_vals = min_vals = np.array([0.0])
