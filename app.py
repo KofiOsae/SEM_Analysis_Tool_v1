@@ -646,6 +646,39 @@ with tab2:
             ra_bottom = np.mean(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
             ra_bottom_std = np.std(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
 
+            # Define units for each metric base name
+            units = {
+                "Δz": "µm",
+                "θ": "deg",
+                "Avg Max Z": "µm",
+                "Avg Min Z": "µm",
+                "Top Width": "µm",
+                "Bottom Width": "µm",
+                "Ra Top": "µm",
+                "Ra Bottom": "µm"
+            }
+            
+            # Format metrics as "mean ± std" with units
+            formatted_metrics = {}
+            for key in metrics:
+                if " (avg" in key:
+                    base_key = key.split(" (avg")[0]
+                    std_key = key.replace(" (avg", " (std")
+                    mean_val = metrics[key]
+                    std_val = metrics.get(std_key, 0)
+                    unit = units.get(base_key, "")
+                    label = f"{base_key} [{unit}]" if unit else base_key
+                    formatted_metrics[label] = f"{mean_val:.4f} ± {std_val:.4f}"
+            
+            # Create and display DataFrame
+            df_metrics = pd.DataFrame.from_dict(formatted_metrics, orient='index', columns=["Mean ± Std"])
+            df_metrics.reset_index(inplace=True)
+            df_metrics.columns = ["Metric", "Mean ± Std"]
+            
+            st.subheader("Calculated Metrics (Mean ± Std)")
+            st.dataframe(df_metrics, use_container_width=True)
+
+
         else:
             st.warning("Invalid profilometer file format.")
     else:
