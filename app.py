@@ -593,119 +593,59 @@ with tab2:
             region_y = y_smooth[m_index:r_index]
 
             if len(region_y) > 1:
-                delta_z = np.max(region_y) - np.min(region_y)
-                delta_z_std = np.std(region_y)
+    try:
+        region_x = np.asarray(region_x, dtype=float).flatten()
+        region_y = np.asarray(region_y, dtype=float).flatten()
+        mask = np.isfinite(region_x) & np.isfinite(region_y)
+        region_x = region_x[mask]
+        region_y = region_y[mask]
 
-                dz = np.diff(region_y)
-                dx = np.diff(region_x)
-                slopes = dz / dx
-                theta = np.degrees(np.arctan(np.max(np.abs(slopes))))
-                theta_std = np.std(np.degrees(np.arctan(slopes)))
+        delta_z = np.max(region_y) - np.min(region_y)
+        delta_z_std = np.std(region_y)
 
+        dz = np.diff(region_y)
+        dx = np.diff(region_x)
+        slopes = dz / dx
+        theta = np.degrees(np.arctan(np.max(np.abs(slopes))))
+        theta_std = np.std(np.degrees(np.arctan(slopes)))
 
-                
-                # Ensure region_y is defined and valid
-                try:
-                    region_y = np.asarray(region_y, dtype=float).flatten()
-                    region_y = region_y[np.isfinite(region_y)]
-                    
-                    if region_y.size > 1:
-                        peaks, _ = find_peaks(region_y)
-                        valleys, _ = find_peaks(-region_y)
-                        
-                        max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
-                        min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
-                    else:
-                        peaks = valleys = np.array([])
-                        max_vals = min_vals = np.array([0.0])
+        peaks, _ = find_peaks(region_y)
+        valleys, _ = find_peaks(-region_y)
 
-                except Exception as e:
-                        st.error(f"Error processing region_y: {e}")
-                        peaks = valleys = np.array([])
-                        max_vals = min_vals = np.array([0.0])
+        top_widths = []
+        ra_tops = []
+        for i in range(len(peaks) - 1):
+            i1, i2 = peaks[i], peaks[i + 1]
+            width = region_x[i2] - region_x[i1]
+            ra = np.mean(np.abs(region_y[i1:i2+1] - np.mean(region_y[i1:i2+1])))
+            top_widths.append(width)
+            ra_tops.append(ra)
 
-                #region_y, peaks, valleys = sanitize_and_find_peaks(region_y)
-                max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
-                min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
-                avg_max = np.mean(max_vals)
-                std_max = np.std(max_vals)
-                avg_min = np.mean(min_vals)
-                std_min = np.std(min_vals)
+        bottom_widths = []
+        ra_bottoms = []
+        for i in range(len(valleys) - 1):
+            i1, i2 = valleys[i], valleys[i + 1]
+            width = region_x[i2] - region_x[i1]
+            ra = np.mean(np.abs(region_y[i1:i2+1] - np.mean(region_y[i1:i2+1])))
+            bottom_widths.append(width)
+            ra_bottoms.append(ra)
 
-                top_threshold = avg_max - 0.1 * delta_z
-                bottom_threshold = avg_min + 0.1 * delta_z
-                top_indices = np.where(region_y >= top_threshold)[0]
-                bottom_indices = np.where(region_y <= bottom_threshold)[0]
+        metrics = {
+            "Δz [µm]": f"{delta_z:.4f} ± {delta_z_std:.4f}",
+            "θ [deg]": f"{theta:.4f} ± {theta_std:.4f}",
+            "Top Width [µm]": f"{np.mean(top_widths):.4f} ± {np.std(top_widths):.4f}" if top_widths else "N/A",
+            "Bottom Width [µm]": f"{np.mean(bottom_widths):.4f} ± {np.std(bottom_widths):.4f}" if bottom_widths else "N/A",
+            "Ra Top [µm]": f"{np.mean(ra_tops):.4f} ± {np.std(ra_tops):.4f}" if ra_tops else "N/A",
+            "Ra Bottom [µm]": f"{np.mean(ra_bottoms):.4f} ± {np.std(ra_bottoms):.4f}" if ra_bottoms else "N/A"
+        }
 
-                top_width = region_x[top_indices[-1]] - region_x[top_indices[0]] if len(top_indices) > 1 else 0
-                top_width_std = np.std(region_x[top_indices]) if len(top_indices) > 1 else 0
-                ra_top = np.mean(np.abs(region_y[top_indices] - np.mean(region_y[top_indices]))) if len(top_indices) > 0 else 0
-                ra_top_std = np.std(np.abs(region_y[top_indices] - np.mean(region_y[top_indices]))) if len(top_indices) > 0 else 0
+        df_metrics = pd.DataFrame(list(metrics.items()), columns=["Metric", "Mean ± Std"])
+        st.subheader("Calculated Metrics (Mean ± Std)")
+        st.dataframe(df_metrics, use_container_width=True)
 
-                bottom_width = region_x[bottom_indices[-1]] - region_x[bottom_indices[0]] if len(bottom_indices) > 1 else 0
-                bottom_width_std = np.std(region_x[bottom_indices]) if len(bottom_indices) > 1 else 0
-                ra_bottom = np.mean(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
-                ra_bottom_std = np.std(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
+    except Exception as e:
+        st.error(f"Error processing metrics: {e}")
 
-                #st.subheader("Calculated Metrics")
-                metrics = {
-                    "Δz (avg)": delta_z,
-                    "Δz (std)": delta_z_std,
-                    "θ (avg, deg)": theta,
-                    "θ (std, deg)": theta_std,
-                    "Avg Max Z": avg_max,
-                    "Std Max Z": std_max,
-                    "Avg Min Z": avg_min,
-                    "Std Min Z": std_min,
-                    "Top Width (avg)": top_width,
-                    "Top Width (std)": top_width_std,
-                    "Bottom Width (avg)": bottom_width,
-                    "Bottom Width (std)": bottom_width_std,
-                    "Ra Top (avg)": ra_top,
-                    "Ra Top (std)": ra_top_std,
-                    "Ra Bottom (avg)": ra_bottom,
-                    "Ra Bottom (std)": ra_bottom_std
-                }
-                # Format metrics as "mean ± std"
-                
-                # Define units for each metric base name
-                units = {
-                    "Δz": "µm",
-                    "θ": "deg",
-                    "Avg Max Z": "µm",
-                    "Avg Min Z": "µm",
-                    "Top Width": "µm",
-                    "Bottom Width": "µm",
-                    "Ra Top": "µm",
-                    "Ra Bottom": "µm"
-                }
-                
-                # Format metrics as "mean ± std" with units
-                formatted_metrics = {}
-                for key in metrics:
-                    if " (avg" in key:
-                        base_key = key.split(" (avg")[0]
-                        std_key = key.replace(" (avg", " (std")
-                        mean_val = metrics[key]
-                        std_val = metrics.get(std_key, 0)
-                        unit = units.get(base_key, "")
-                        label = f"{base_key} [{unit}]" if unit else base_key
-                        formatted_metrics[label] = f"{mean_val:.4f} ± {std_val:.4f}"
-                
-                # Create and display DataFrame
-                df_metrics = pd.DataFrame.from_dict(formatted_metrics, orient='index', columns=["Mean ± Std"])
-                df_metrics.reset_index(inplace=True)
-                df_metrics.columns = ["Metric", "Mean ± Std"]
-                
-                st.subheader("Calculated Metrics (Mean ± Std)")
-                st.dataframe(df_metrics, use_container_width=True)
-
-
-
-            if st.session_state.sem_line_profile is not None:
-                st.subheader("Imported SEM Line Profile")
-                fig_sem_line = px.line(y=st.session_state.sem_line_profile, labels={"y": "Intensity or Height"}, title="Imported SEM Line Profile")
-                st.plotly_chart(fig_sem_line, use_container_width=True)
         else:
             st.warning("Invalid profilometer file format.")
     else:
