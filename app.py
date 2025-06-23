@@ -618,6 +618,11 @@ with tab2:
                         peaks = valleys = np.array([])
                         max_vals = min_vals = np.array([0.0])
 
+                    except Exception as e:
+                        st.error(f"Error processing region_y: {e}")
+                        peaks = valleys = np.array([])
+                        max_vals = min_vals = np.array([0.0])
+
                 #region_y, peaks, valleys = sanitize_and_find_peaks(region_y)
                 max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
                 min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
