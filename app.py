@@ -665,8 +665,24 @@ with tab2:
                     "Ra Bottom (avg)": ra_bottom,
                     "Ra Bottom (std)": ra_bottom_std
                 }
-                for key, value in metrics.items():
-                    st.write(f"**{key}**: {value:.4f}")
+                # Format metrics as "mean ± std"
+                formatted_metrics = {}
+                for key in metrics:
+                    if " (avg)" in key:
+                        base_key = key.replace(" (avg)", "")
+                        std_key = key.replace(" (avg)", " (std)")
+                        mean_val = metrics[key]
+                        std_val = metrics.get(std_key, 0)
+                        formatted_metrics[base_key] = f"{mean_val:.4f} ± {std_val:.4f}"
+                
+                # Create and display DataFrame
+                df_metrics = pd.DataFrame.from_dict(formatted_metrics, orient='index', columns=["Mean ± Std"])
+                df_metrics.reset_index(inplace=True)
+                df_metrics.columns = ["Metric", "Mean ± Std"]
+                
+                st.subheader("Calculated Metrics (Mean ± Std)")
+                st.dataframe(df_metrics, use_container_width=True)
+
 
             if st.session_state.sem_line_profile is not None:
                 st.subheader("Imported SEM Line Profile")
