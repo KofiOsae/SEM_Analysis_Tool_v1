@@ -547,43 +547,115 @@ with tab1:
     else:
         st.info("Please upload at least one SEM image.")
         
+
 with tab2:
     st.header("Stylus Profilometer Analysis")
-    up = st.file_uploader("Upload profilometer trace (.csv, .xlsx, .txt)", type=["csv", "txt", "xls", "xlsx"], key="prof_file")
-    if up:
-        dfp = parse_profilometer(up)
-        if dfp is not None and dfp.shape[1]>=2:
-            result, x, y, y_smooth = extract_profile_metrics(dfp)
-            st.subheader("Profilometer Metrics from File")
-            st.json(result)
-            fig_prof = px.line(x=x, y=y, labels={"x": "Lateral (µm)", "y": "Height (µm)"}, title="Raw Profilometer Trace")
-            st.plotly_chart(fig_prof, use_container_width=True)
-            fig_prof2 = px.line(x=x, y=y_smooth, labels={"x": "Lateral (µm)", "y": "Height (µm)"}, title="Smoothed Profilometer Trace")
-            st.plotly_chart(fig_prof2, use_container_width=True)
-    
-            st.markdown("**Define vertical reference lines for measurement:**")
-            ref_left = st.slider("Left Reference (µm)", min_value=float(min(x)), max_value=float(max(x)), value=float(min(x)))
-            ref_right = st.slider("Right Reference (µm)", min_value=float(min(x)), max_value=float(max(x)), value=float(max(x)))
-            st.write(f"Analysis Region: [{ref_left:.2f}, {ref_right:.2f}] µm")
-            ind_left = np.searchsorted(x, ref_left)
-            ind_right = np.searchsorted(x, ref_right)
-            region_x = x[ind_left:ind_right] if ind_right>ind_left else x
-            region_y = y_smooth[ind_left:ind_right] if ind_right>ind_left else y_smooth
-            if len(region_y)>0:
+
+    uploaded_file = st.file_uploader("Upload profilometer trace (.csv, .xlsx, .txt)", type=["csv", "txt", "xls", "xlsx"], key="prof_file")
+    if uploaded_file:
+        df = parse_profilometer(uploaded_file)
+        if df is not None and df.shape[1] >= 2:
+            x = df.iloc[:, 0].values
+            y = df.iloc[:, 1].values
+            y_smooth = smooth_profile(y)
+
+            st.subheader("Interactive Profilometer Plot")
+            col1, col2 = st.columns(2)
+            with col1:
+                m_pos = st.slider("Marker M Position (µm)", min_value=float(x[0]), max_value=float(x[-1]), value=float(x[0] + (x[-1] - x[0]) * 0.25))
+            with col2:
+                r_pos = st.slider("Marker R Position (µm)", min_value=float(x[0]), max_value=float(x[-1]), value=float(x[0] + (x[-1] - x[0]) * 0.75))
+
+            m_index = np.searchsorted(x, m_pos)
+            r_index = np.searchsorted(x, r_pos)
+            if m_index > r_index:
+                m_index, r_index = r_index, m_index
+                m_pos, r_pos = r_pos, m_pos
+
+            show_raw = st.checkbox("Show Raw Profile", value=True)
+            show_smooth = st.checkbox("Show Smoothed Profile", value=True)
+
+            fig = go.Figure()
+            if show_raw:
+                fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='Raw Profile', line=dict(color='gray')))
+            if show_smooth:
+                fig.add_trace(go.Scatter(x=x, y=y_smooth, mode='lines', name='Smoothed Profile', line=dict(color='blue')))
+            fig.add_vline(x=m_pos, line=dict(color='red', dash='dash'), name='Marker M')
+            fig.add_vline(x=r_pos, line=dict(color='green', dash='dash'), name='Marker R')
+            fig.update_layout(title='Profilometer Profile',
+                              xaxis_title='Lateral (µm)',
+                              yaxis_title='Height (µm)',
+                              showlegend=True)
+            st.plotly_chart(fig, use_container_width=True)
+
+            region_x = x[m_index:r_index]
+            region_y = y_smooth[m_index:r_index]
+
+            if len(region_y) > 1:
                 delta_z = np.max(region_y) - np.min(region_y)
-                slope = np.polyfit(region_x, region_y, 1)[0]
-                angle = np.degrees(np.arctan(slope))
-                st.write(f"Delta Height: {delta_z:.3f} µm, Slope: {slope:.3f} µm/µm, Angle: {angle:.1f}°")
+                delta_z_std = np.std(region_y)
+
+                dz = np.diff(region_y)
+                dx = np.diff(region_x)
+                slopes = dz / dx
+                theta = np.degrees(np.arctan(np.max(np.abs(slopes))))
+                theta_std = np.std(np.degrees(np.arctan(slopes)))
+
+                peaks, _ = find_peaks(region_y)
+                valleys, _ = find_peaks(-region_y)
+                max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
+                min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
+                avg_max = np.mean(max_vals)
+                std_max = np.std(max_vals)
+                avg_min = np.mean(min_vals)
+                std_min = np.std(min_vals)
+
+                top_threshold = avg_max - 0.1 * delta_z
+                bottom_threshold = avg_min + 0.1 * delta_z
+                top_indices = np.where(region_y >= top_threshold)[0]
+                bottom_indices = np.where(region_y <= bottom_threshold)[0]
+
+                top_width = region_x[top_indices[-1]] - region_x[top_indices[0]] if len(top_indices) > 1 else 0
+                top_width_std = np.std(region_x[top_indices]) if len(top_indices) > 1 else 0
+                ra_top = np.mean(np.abs(region_y[top_indices] - np.mean(region_y[top_indices]))) if len(top_indices) > 0 else 0
+                ra_top_std = np.std(np.abs(region_y[top_indices] - np.mean(region_y[top_indices]))) if len(top_indices) > 0 else 0
+
+                bottom_width = region_x[bottom_indices[-1]] - region_x[bottom_indices[0]] if len(bottom_indices) > 1 else 0
+                bottom_width_std = np.std(region_x[bottom_indices]) if len(bottom_indices) > 1 else 0
+                ra_bottom = np.mean(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
+                ra_bottom_std = np.std(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
+
+                st.subheader("Calculated Metrics")
+                metrics = {
+                    "Δz (avg)": delta_z,
+                    "Δz (std)": delta_z_std,
+                    "θ (avg, deg)": theta,
+                    "θ (std, deg)": theta_std,
+                    "Avg Max Z": avg_max,
+                    "Std Max Z": std_max,
+                    "Avg Min Z": avg_min,
+                    "Std Min Z": std_min,
+                    "Top Width (avg)": top_width,
+                    "Top Width (std)": top_width_std,
+                    "Bottom Width (avg)": bottom_width,
+                    "Bottom Width (std)": bottom_width_std,
+                    "Ra Top (avg)": ra_top,
+                    "Ra Top (std)": ra_top_std,
+                    "Ra Bottom (avg)": ra_bottom,
+                    "Ra Bottom (std)": ra_bottom_std
+                }
+                for key, value in metrics.items():
+                    st.write(f"**{key}**: {value:.4f}")
+
             if st.session_state.sem_line_profile is not None:
                 st.subheader("Imported SEM Line Profile")
-                region_prof = st.session_state.sem_line_profile
-                fig_sem_line = px.line(y=region_prof, labels={"y": "Intensity or Height"}, title="Imported SEM Line Profile")
+                fig_sem_line = px.line(y=st.session_state.sem_line_profile, labels={"y": "Intensity or Height"}, title="Imported SEM Line Profile")
                 st.plotly_chart(fig_sem_line, use_container_width=True)
         else:
             st.warning("Invalid profilometer file format.")
     else:
         st.info("Upload a profilometer trace file for analysis.")
-        
+
 with tab3:
     st.markdown("""
 
