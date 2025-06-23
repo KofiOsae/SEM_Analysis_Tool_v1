@@ -614,27 +614,27 @@ with tab2:
                 max_vals = min_vals = np.array([0.0])
             
              #region_y, peaks, valleys = sanitize_and_find_peaks(region_y)
-             max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
-             min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
-             avg_max = np.mean(max_vals)
-             std_max = np.std(max_vals)
-             avg_min = np.mean(min_vals)
-             std_min = np.std(min_vals)
+            max_vals = region_y[peaks] if len(peaks) > 0 else np.array([np.max(region_y)])
+            min_vals = region_y[valleys] if len(valleys) > 0 else np.array([np.min(region_y)])
+            avg_max = np.mean(max_vals)
+            std_max = np.std(max_vals)
+            avg_min = np.mean(min_vals)
+            std_min = np.std(min_vals)
             
-             top_threshold = avg_max - 0.1 * delta_z
-             bottom_threshold = avg_min + 0.1 * delta_z
-             top_indices = np.where(region_y >= top_threshold)[0]
-             bottom_indices = np.where(region_y <= bottom_threshold)[0]
+            top_threshold = avg_max - 0.1 * delta_z
+            bottom_threshold = avg_min + 0.1 * delta_z
+            top_indices = np.where(region_y >= top_threshold)[0]
+            bottom_indices = np.where(region_y <= bottom_threshold)[0]
             
-             top_width = region_x[top_indices[-1]] - region_x[top_indices[0]] if len(top_indices) > 1 else 0
-             top_width_std = np.std(region_x[top_indices]) if len(top_indices) > 1 else 0
-             ra_top = np.mean(np.abs(region_y[top_indices] - np.mean(region_y[top_indices]))) if len(top_indices) > 0 else 0
-             ra_top_std = np.std(np.abs(region_y[top_indices] - np.mean(region_y[top_indices]))) if len(top_indices) > 0 else 0
+            top_width = region_x[top_indices[-1]] - region_x[top_indices[0]] if len(top_indices) > 1 else 0
+            top_width_std = np.std(region_x[top_indices]) if len(top_indices) > 1 else 0
+            ra_top = np.mean(np.abs(region_y[top_indices] - np.mean(region_y[top_indices]))) if len(top_indices) > 0 else 0
+            ra_top_std = np.std(np.abs(region_y[top_indices] - np.mean(region_y[top_indices]))) if len(top_indices) > 0 else 0
             
-             bottom_width = region_x[bottom_indices[-1]] - region_x[bottom_indices[0]] if len(bottom_indices) > 1 else 0
-             bottom_width_std = np.std(region_x[bottom_indices]) if len(bottom_indices) > 1 else 0
-             ra_bottom = np.mean(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
-             ra_bottom_std = np.std(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
+            bottom_width = region_x[bottom_indices[-1]] - region_x[bottom_indices[0]] if len(bottom_indices) > 1 else 0
+            bottom_width_std = np.std(region_x[bottom_indices]) if len(bottom_indices) > 1 else 0
+            ra_bottom = np.mean(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
+            ra_bottom_std = np.std(np.abs(region_y[bottom_indices] - np.mean(region_y[bottom_indices]))) if len(bottom_indices) > 0 else 0
 
         else:
             st.warning("Invalid profilometer file format.")
