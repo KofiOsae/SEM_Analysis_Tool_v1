@@ -624,4 +624,4 @@ with tab3:
     - The app displays raw and smoothed traces using interactive Plotly charts.
     - Use the vertical reference sliders to define the region for measurement. The tool calculates the height difference, slope, and angle for that region.
     
-    Enjoy using this integrated metrology tool!
+    Enjoy using this integrated metrology tool!""")
