@@ -601,10 +601,9 @@ with tab2:
                 theta = np.degrees(np.arctan(np.max(np.abs(slopes))))
                 theta_std = np.std(np.degrees(np.arctan(slopes)))
 
-                
                 region_y = np.asarray(region_y).flatten()
                 if region_y.size == 0:
-                    peaks, valleys = np.array([]), np.array([])
+                    peaks, valleys = np.array([]), np.array([])
                 else:
                     peaks, _ = find_peaks(region_y)
                     valleys, _ = find_peaks(-region_y)
